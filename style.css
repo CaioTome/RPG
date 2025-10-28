@@ -1,0 +1,44 @@
+   :root {
+            --color-primary: #49244f; /* Roxo Escuro */
+            --color-primary-light: #6a3674;
+            --color-accent: #f0f4f8; /* Cinza Claro Suave */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .nav-button {
+            @apply px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-[var(--color-accent)] transition-colors;
+        }
+        .nav-button.active {
+            background-color: var(--color-primary);
+            color: white;
+            @apply hover:bg-[var(--color-primary-light)];
+        }
+        .filter-button {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+            @apply px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm;
+        }
+        .filter-button.active {
+            background-color: var(--color-primary);
+            color: white;
+            @apply hover:bg-[var(--color-primary-light)] shadow-md;
+        }
+        .text-primary {
+            color: var(--color-primary);
+        }
+        .bg-primary {
+            background-color: var(--color-primary);
+        }
+        .ring-primary:focus {
+            --tw-ring-color: var(--color-primary);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            @apply bg-white p-6 rounded-xl shadow-xl transition-all duration-300 border border-gray-100;
+        }

@@ -1,199 +1,444 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Grande Reino</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo Escuro) -->
+    <!-- Application Structure Plan: SPA com navegação principal por abas (Visão Geral, Regiões, Facções). A 'Visão Geral' apresenta a introdução. 'Regiões' usa um subfiltro de botões para selecionar uma região (Norte, Sul, etc.) e exibe os locais dessa região em cards. 'Facções' usa um layout similar, com botões para selecionar uma facção e exibir seus detalhes. Uma barra de busca em 'Regiões' e 'Facções' permite filtrar o conteúdo dinamicamente. Esta estrutura foi escolhida para quebrar o 'worldbuilding' denso em pedaços gerenciáveis, permitindo ao usuário focar no que precisa (explorar uma área ou entender um grupo) sem ser sobrecarregado por uma parede de texto. -->
+    <!-- Visualization & Content Choices: 
+    - Introdução (Lore) -> Informar -> Bloco de texto estático -> N/A (Leitura) -> HTML/Tailwind.
+    - Regiões e Locais -> Organizar/Explorar -> Botões de Filtro (por Região) + Cards de Conteúdo (para Locais) -> Interação: Clique (Botão) mostra/oculta locais; Busca (Input) filtra cards -> JS para filtrar e renderizar HTML dinâmico.
+    - Facções e Guildas -> Organizar/Explorar -> Botões de Filtro (por Facção) + Card de Conteúdo (para Detalhes) -> Interação: Clique (Botão) mostra detalhes; Busca (Input) filtra lista de facções -> JS para filtrar e renderizar HTML dinâmico.
+    - Resumo das Facções -> Informar/Organizar -> Tabela HTML Estática -> N/A (Leitura) -> HTML/Tailwind.
+    - Justificativa: A interatividade (filtros, busca, mostrar/ocultar) é focada em gerenciar a exibição de texto, pois o relatório fonte é 100% qualitativo. Não há dados para gráficos. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="container">
-    <header>
-        <h1>O Grande Reino</h1>
-    </header>
+<body class="bg-gray-50 text-gray-800">
 
-    <nav class="navbar bg-body-tertiary fixed-top">
-
-
-
-
-
-
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Guia do Grande Reino</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
-                aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-
-
-
-
-
-
-
-
-
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar"
-                aria-labelledby="offcanvasNavbarLabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Sumário</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <header class="bg-white shadow-lg sticky top-0 z-10">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-2xl font-extrabold text-primary">O Grande Reino</h1>
                 </div>
-
-
-
-
-
-
-
-
-                <div class="offcanvas-body">
-                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="index.html">Início</a>
-                        </li>
-
-
-
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Facções e Guildas</a>
-                        </li>
-
-
-
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                Regiões
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Centro</a></li>
-
-
-
-
-
-
-
-
-
-                                <li><a class="dropdown-item" href="#">Norte</a></li>
-
-                                <li><a class="dropdown-item" href="#">Leste</a></li>
-
-                                <li><a class="dropdown-item" href="#">Sul</a></li>
-
-                                <li><a class="dropdown-item" href="#">Oeste</a></li>
-
-
-
-
-
-
-
-
-
-                            </ul>
-                        </li>
-
-
-
-                    </ul>
+                <div class="hidden sm:block sm:ml-6">
+                    <div class="flex space-x-2" id="main-nav">
+                        <button class="nav-button active" data-target="visao-geral">Visão Geral</button>
+                        <button class="nav-button" data-target="regioes">Regiões e Locais</button>
+                        <button class="nav-button" data-target="faccoes">Facções e Guildas</button>
+                    </div>
                 </div>
             </div>
+        </nav>
+        <div class="sm:hidden p-4 bg-white shadow-md">
+            <div class="flex space-x-2 justify-center" id="main-nav-mobile">
+                <button class="nav-button active" data-target="visao-geral">Visão Geral</button>
+                <button class="nav-button" data-target="regioes">Regiões</button>
+                <button class="nav-button" data-target="faccoes">Facções</button>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <main>
-        <h1>Introdução</h1>
+    <main class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
-        <p>Refugiados e colonos conhecem e se referem a Allara, as terras ao norte e a oeste dos confins, como a Velha
-            Pátria, pois foi lá que a maioria dos seus ancestrais nasceu. As pessoas vivem em Allara há mais de mil
-            anos, e o continente recebeu seu nome pelos humanos que primeiro se assentaram em seus ricos vales, mas que
-            foram posteriormente deslocados por colonizadores do Império no noroeste distante. Allara também tem a
-            distinção de ser o local de nascimento dos grandes reinos anões: suas poderosas fortalezas, muitas das quais
-            agora em ruínas, ainda podem ser vistas no alto das montanhas.</p>
+        <section id="visao-geral" class="content-section active">
+            <div class="card">
+                <h2 class="text-3xl font-bold text-primary mb-6">A Queda do Grande Reino</h2>
+                <div class="space-y-4 text-gray-700 leading-relaxed">
+                    <p>Refugiados e colonos conhecem e se referem a Allara, as terras ao norte e a oeste dos confins,
+                        como a Velha Pátria, pois foi lá que a maioria dos seus ancestrais nasceu. As pessoas vivem em
+                        Allara há mais de mil anos, e o continente recebeu seu nome pelos humanos que primeiro se
+                        assentaram em seus ricos vales, mas que foram posteriormente deslocados por colonizadores do
+                        Império no noroeste distante. Allara também tem a distinção de ser o local de nascimento dos
+                        grandes reinos anões: suas poderosas fortalezas, muitas das quais agora em ruínas, ainda podem
+                        ser vistas no alto das montanhas.</p>
+                    <p>A Velha Pátria poderia ter se salvado se não tivesse ignorado os sinais de alerta. O continente
+                        exibia cerca de quarenta nações diferentes, com mais de cem políticas diferentes dentro de uma
+                        nação, e todas estavam à sombra do Grande Reino, um vasto e rico território que havia dominado a
+                        política internacional a séculos. O ressentimento pela riqueza do Grande Reino, a sua falta de
+                        respeito ou consideração por seus vizinhos, e a sua decadência alimentaram o ressentimento dos
+                        reinos menores, que esperaram pela oportunidade de trazer o fim do seu domínio.</p>
+                    <p>A população de Allara havia crescido sem limites conforme as melhorias na medicina e no
+                        saneamento permitiam às pessoas viver mais e ter filhos com mais segurança. Porém, as técnicas
+                        agrícolas ruins nas nações mais pobres levavam a fomes disseminadas, pioradas por uma série de
+                        fortes secas que deixaram o continente inteiro com falta de água. Quando a peste atingiu as
+                        cidades costeiras e se espalhou para o interior do continente, matando uma em cada quatro
+                        pessoas, as nações selaram as suas fronteiras, recusaram auxílio e cometeram atrocidades para
+                        proteger suas próprias populações. Orcs, pessoas distorcidas em monstros por uma doença da alma,
+                        começaram a aparecer nas áreas rurais, formando bandos e derrubando governos para queimar tudo
+                        até restar somente cinzas.</p>
+                    <p>O Grande Reino poderia ter intervindo, aberto os seus cofres e as suas fronteiras para aliviar o
+                        sofrimento, mas os seus governantes corruptos e ineficientes, assolados por sicofantas que
+                        buscavam se enriquecer de todas as maneiras possíveis, significaram que a nação mais poderosa do
+                        continente nada fez. Qualquer chance do Grande Reino mudar a sua posição chegou ao fim quando os
+                        paladinos, uma ordem de cavaleiros virtuosos encarregados de proteger a Coroa, se voltaram
+                        contra o seu rei, matando-o e eliminando a maior parte da família real. Reivindicações de Pedra
+                        Branca, o trono de poder do reino, vieram de todos os lados, precipitando uma guerra civil que
+                        continua até os dias de hoje.</p>
+                    <p>Resta a esperança de que a sanidade irá prevalecer e que as pessoas irão se unir para combater as
+                        ameaças que operam para desmantelar o mundo civilizado, mas muitas pessoas desistiram a ponto de
+                        abandonar as suas antigas vidas em prol de um futuro incerto nos confins. Mesmo com a ganância e
+                        a ambição sabotando os esforços de restaurar a ordem, as pessoas que decidirem ficar para trás
+                        lutam por seus lares e por um futuro, bem como para preservar a terra para os seus descendentes.
+                    </p>
+                </div>
+            </div>
+        </section>
 
-        <p>A Velha Pátria poderia ter se salvado se não tivesse ignorado os sinais de alerta. O continente exibia cerca
-            de quarenta nações diferentes, com mais de cem políticas diferentes dentro de uma nação, e todas estavam à
-            sombra do Grande Reino, um vasto e rico território que havia dominado a política internacional a séculos. O
-            ressentimento pela riqueza do Grande Reino, a sua falta de respeito ou consideração por seus vizinhos, e a
-            sua decadência alimentaram o ressentimento dos reinos menores, que esperaram pela oportunidade de trazer o
-            fim do seu domínio.
-        </p>
+        <section id="regioes" class="content-section">
+            <h2 class="text-3xl font-bold text-primary mb-6">Explorar Regiões e Locais</h2>
+            <p class="text-gray-700 mb-6">Navegue pelas diferentes regiões do Grande Reino para descobrir os locais
+                notáveis, cidades e ruínas perigosas que definem o continente. Use a barra de busca para encontrar um
+                local específico ou filtre por região usando os botões.</p>
 
-        <p>A população de Allara havia crescido sem limites conforme as melhorias na medicina e no saneamento permitiam às pessoas viver mais e ter filhos com mais segurança. Porém, as técnicas agrícolas ruins nas nações mais pobres levavam a fomes disseminadas, pioradas por uma série de fortes secas que deixaram o continente inteiro com falta de água. Quando a peste atingiu as cidades costeiras e se espalhou para o interior do continente, matando uma em cada quatro pessoas, as nações selaram as suas fronteiras, recusaram auxílio e cometeram atrocidades para proteger suas próprias populações. Orcs, pessoas distorcidas em monstros por uma doença da alma, começaram a aparecer nas áreas rurais, formando bandos e derrubando governos para queimar tudo até restar somente cinzas.</p>
+            <div class="mb-6">
+                <input type="text" id="regiao-search" placeholder="Buscar local..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 ring-primary:focus">
+            </div>
 
-        <p>O Grande Reino poderia ter intervindo, aberto os seus cofres e as suas fronteiras para aliviar o sofrimento, mas os seus governantes corruptos e ineficientes, assolados por sicofantas que buscavam se enriquecer de todas as maneiras possíveis, significaram que a nação mais poderosa do continente nada fez. Qualquer chance do Grande Reino mudar a sua posição chegou ao fim quando os paladinos, uma ordem de cavaleiros virtuosos encarregados de proteger a Coroa, se voltaram contra o seu rei, matando-o e eliminando a maior parte da família real. Reivindicações de Pedra Branca, o trono de poder do reino, vieram de todos os lados, precipitando uma guerra civil que continua até os dias de hoje. </p>
+            <div class="flex flex-wrap gap-2 mb-8" id="regiao-filters">
+                <button class="filter-button active" data-regiao="Todos">Todos</button>
+                <button class="filter-button" data-regiao="Centro">Centro</button>
+                <button class="filter-button" data-regiao="Norte">Norte</button>
+                <button class="filter-button" data-regiao="Leste">Leste</button>
+                <button class="filter-button" data-regiao="Sul">Sul</button>
+                <button class="filter-button" data-regiao="Oeste">Oeste</button>
+            </div>
 
-        <p>Resta a esperança de que a sanidade irá prevalecer e que as pessoas irão se unir para combater as ameaças que operam para desmantelar o mundo civilizado, mas muitas pessoas desistiram a ponto de abandonar as suas antigas vidas em prol de um futuro incerto nos confins. Mesmo com a ganância e a ambição sabotando os esforços de restaurar a ordem, as pessoas que decidirem ficar para trás lutam por seus lares e por um futuro, bem como para preservar a terra para os seus descendentes.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="regioes-content">
+            </div>
+        </section>
+
+        <section id="faccoes" class="content-section">
+            <h2 class="text-3xl font-bold text-primary mb-6">Facções e Guildas</h2>
+            <p class="text-gray-700 mb-6">O poder no Grande Reino está fragmentado. Explore as várias facções, guildas e
+                ordens que lutam pelo controle, influência ou simplesmente pela sobrevivência. Clique em uma facção na
+                lista para ver seus objetivos, líderes e segredos.</p>
+
+            <div class="card mb-8">
+                <h3 class="text-2xl font-semibold text-primary mb-4">Resumo das Facções</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Nome</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Descrição Curta</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="faccoes-resumo-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                    <input type="text" id="faccao-search" placeholder="Buscar facção..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 ring-primary:focus mb-4">
+                    <div class="flex flex-col space-y-2" id="faccoes-list">
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div class="card min-h-[300px]" id="faccoes-detail">
+                        <p class="text-gray-500">Selecione uma facção da lista para ver os detalhes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <footer></footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
 
+            const db = {
+                regioes: [
+                    {
+                        nome: "Pedra Branca",
+                        regiao: "Centro",
+                        regiaoNome: "Centro - Pradaria",
+                        desc: "A opulenta, mas agora sitiada, capital do Grande Reino. Outrora o coração político e cultural de Allara, hoje é uma cidade dividida e esgotada pela guerra civil. Suas grandiosas avenidas estão cheias de barricadas e seus palácios de mármore branco servem como fortalezas para as facções que reivindicam o trono."
+                    },
+                    {
+                        nome: "Sanguine",
+                        regiao: "Centro",
+                        regiaoNome: "Centro - Pradaria",
+                        desc: "A Cidade sob a Cidade. Escondida sob a capital do Grande Reino, esse submundo sombrio é lar de milhares de dampiros que servem sua regente, a Rainha da Graça e Sangue, Carmilla. É um labirinto frio e úmido de túneis, catacumbas e esgotos, onde a influência da superfície se esvai e a lei é ditada pela sede de poder da realeza sombria."
+                    },
+                    {
+                        nome: "Torre de Marfim",
+                        regiao: "Centro",
+                        regiaoNome: "Centro - Pradaria",
+                        desc: "Uma ilha flutuante de arquitetura elegante e arrogante, mantida no ar por magia antiga. É o lar exclusivo dos Magos mais poderosos e pretensiosos do continente, que usam sua posição elevada para observar e tentar codificar o uso da magia no Grande Reino. A Torre é um símbolo de conhecimento inalcançável e isolamento político."
+                    },
+                    {
+                        nome: "Gelo Eterno",
+                        regiao: "Norte",
+                        regiaoNome: "Norte - Taiga",
+                        desc: "A maior cidade do Norte, escavada em uma montanha de gelo azulado e pedra maciça. Seus habitantes são robustos e estoicos, acostumados à escuridão do inverno e à ameaça constante que paira sobre o Baluarte. As lareiras de Gelo Eterno são a última linha de aquecimento e esperança antes do vazio gelado."
+                    },
+                    {
+                        nome: "Baluarte",
+                        regiao: "Norte",
+                        regiaoNome: "Norte - Taiga",
+                        desc: "Uma estrutura militar maciça de gelo e pedra, estendendo-se por quilômetros. É o lar da Ordem dos Guardiões, uma ordem de guerreiros abnegados que juraram proteger o reino. O Baluarte é um lugar de vigília eterna e sacrifício, onde a esperança é escassa e a disciplina é a única coisa que impede a Devastação de avançar."
+                    },
+                    {
+                        nome: "Devastação",
+                        regiao: "Norte",
+                        regiaoNome: "Norte - Taiga",
+                        desc: "Mesmo depois de mil anos, tempestades mágicas devastam as ruínas do Antigo Império no lugar que hoje é chamado de Devastação. Os horrores gerados por esta terra exigiam a criação do Baluarte, uma demarcação de castelos, muralhas e outras defesas guardadas por um exército voluntário financiado, até recentemente, pelo Grande Reino. Ano após ano, os defensores mantiveram afastados os fomorianos, descendentes alterados do Antigo Império, mas, sem novos fundos chegando da tumultuosa Velha Pátria, muitos temem que o inimigo irá superar as defesas e sair do controle. O legado do Império é de mau uso da magia, adoração diabólica e corrupção, mas ele não começou dessa forma. Os fundadores eram sobreviventes do Grande Cataclismo, um período de inundações disseminadas que marcaram o fim da Era dos Mitos, e que tentaram reconstruir a sua cultura e civilização nas Terras da Alvorada. A nação incipiente cresceu sem limites e se tornou um império cerca de três mil anos atrás. Não contente com o território que ele detinha, o Império se expandiu para o sul, conquistando os estados menores em seu caminho, escravizando as populações ou as eliminando. Eventualmente, os imperiais voltaram a sua atenção para além do continente, lançando o seu poder contra Zá e, eventualmente, navegando pelo oceano para agredir os povos do outro lado do mundo. Dentre aqueles estavam os kalasans, que derrotaram os invasores tão violentamente que muitos esperavam que essa terra distante viesse dar cabo do Império, mas os seus navios nunca chegaram. Mesmo com todo o seu poderio, com toda a sua riqueza, o Império não pôde controlar a podridão em seu cerne. Os imperadores há muito eram poderosos feiticeiros e governavam com o apoio de heresiarcas diabólicos que adotavam nomes rebuscados para ocultar seus nomes verdadeiros. Contanto que permitissem que os heresiarcas governassem os seus territórios como quisessem, os imperadores podiam permanecer. Porém, o último a se alçar ao trono, um grandioso assento monstruoso feito dos crânios dos regentes mortos por seus ancestrais, viu no que o Império havia se tornado e buscou reformas, concedendo maiores liberdades ao povo comum e até mesmo garantindo a independência de algumas colônias distantes. Os heresiarcas se rebelaram e partiram o Império em pedaços. Dois mil anos não foi tempo o bastante para abater a ruína lançada pelos heresiarcas. Nuvens quilométricas verdes e roxas ocultam o sol e arrastam por sobre o solo cortinas de fogo assassino, branco e fantasmagórico, queimando e corrompendo tudo o que tocarem. Grandes faixas de terra se tornaram vidro pelo calor intenso lançado por feitiços apocalípticos que ainda soltam fagulhas e estalos. Porém, algumas pessoas sobreviveram a essa calamidade, ainda que alterados e tornados insanos pelo sofrimento. Uma grande muralha foi erigida para estancar a enxurrada de horrores que se derramaria para fora da Devastação, enquanto os descendentes dessa terra agora espreitam nas sombras da Velha Pátria, vivendo como párias pelo toque das trevas que carregam."
+                    },
+                    {
+                        nome: "Ninho da Águia",
+                        regiao: "Leste",
+                        regiaoNome: "Leste - Vales e Montanhas",
+                        desc: "Situada nas Montanhas da Lua, sob o pico conhecido como Lança do Gigante, a milhares de metros acima do Vale. Esta é a maior cidade do Leste e é famosa por ser quase inexpugnável. A cidade é um emaranhado de pontes de corda e edifícios de madeira fixados na face da montanha, com vistas deslumbrantes e um ar rarefeito que afasta os fracos."
+                    },
+                    {
+                        nome: "Minas Profundas",
+                        regiao: "Leste",
+                        regiaoNome: "Leste - Vales e Montanhas",
+                        desc: "Uma vasta rede de ruínas anãs sob uma montanha, onde os ecos de um reino subterrâneo perdido ainda ressoam. Aventureiros são atraídos pelo ouro e pelas joias esquecidas, mas a escuridão esconde não apenas armadilhas anãs, mas também criaturas corrompidas e famintas que veem qualquer luz invasora como um convite para a caça."
+                    },
+                    {
+                        nome: "Necrópole",
+                        regiao: "Leste",
+                        regiaoNome: "Leste - Vales e Montanhas",
+                        desc: "Uma cidade de pedra cinzenta e gótica em um vale isolado, onde magos e estudiosos das artes sombrias coexistem com seus experimentos mortos-vivos. A Necrópole não é necessariamente maligna, mas sua busca pela compreensão da vida e da morte a torna temida. É um lugar de silêncio frio, onde ghouls, zumbis e liches servem como bibliotecários e guardas."
+                    },
+                    {
+                        nome: "Pontalto",
+                        regiao: "Sul",
+                        regiaoNome: "Sul - Mar do Medo",
+                        desc: "A antiga maior cidade portuária, agora reduzida a ruínas negras e cinzas por um incêndio mágico de quarentena. Pontalto é um lembrete sombrio e devastado de como a febre colérica pode se espalhar. O local está sob vigilância rigorosa; o cheiro de cinzas, sal e morte ainda paira no ar, e o mar murmura os nomes dos cinco mil perdidos."
+                    },
+                    {
+                        nome: "Oráldia",
+                        regiao: "Sul",
+                        regiaoNome: "Sul - Mar do Medo",
+                        desc: "O reino submerso de uma civilização antiga que ousou ofender os deuses. Suas torres de mármore e templos cintilam sob as águas escuras, mas o local irradia uma aura de profundo terror divino. Dizem que a cidade ainda está habitada por seres que sobreviveram ao Grande Cataclismo e foram transformados pela pressão e pela culpa dos deuses."
+                    },
+                    {
+                        nome: "Ilhas do Medo",
+                        regiao: "Sul",
+                        regiaoNome: "Sul - Mar do Medo",
+                        desc: "Um arquipélago traiçoeiro e gigantesco, onde a vida é uma luta constante. Aqui, culturas diversas e forasteiros lutam contra piratas incansáveis, ambientes hostis e os temíveis Nagas – o povo serpente, remanescentes do tecnologicamente avançado Império Thoniano. É um caldeirão de sobrevivência e conflito de eras."
+                    },
+                    {
+                        nome: "Grande Árvore",
+                        regiao: "Oeste",
+                        regiaoNome: "Oeste - Floresta Temperada",
+                        desc: "A maior cidade do Oeste, construída sob e dentro de uma árvore colossal, que pode ser vista por todo o Grande Reino. Seus níveis inferiores de raízes e troncos ocos refletem a graça e a antiga arquitetura élfica, enquanto os níveis superiores, de construção humana, são uma imitação ambiciosa e apressada da majestade élfica, marcando o contraste entre a natureza e a ambição humana."
+                    },
+                    {
+                        nome: "Floresta de Arlathan",
+                        regiao: "Oeste",
+                        regiaoNome: "Oeste - Floresta Temperada",
+                        desc: "O que antes foi a gloriosa capital élfica de Arlathan agora é uma floresta temperada densa e selvagem, onde a natureza consumiu a civilização. Embora itens de magia e poder sejam abundantes, a própria floresta está imbuída de uma magia élfica selvagem, tornando as expedições perigosas. Criaturas guardam a beleza traiçoeira do local."
+                    },
+                    {
+                        nome: "Monastério Punho do Dragão do Oeste",
+                        regiao: "Oeste",
+                        regiaoNome: "Oeste - Floresta Temperada",
+                        desc: "Aninhado nos Mil Degraus da montanha oriental, este monastério de monges guerreiros é o auge da disciplina física e espiritual. Devotos de Draconus, eles se dedicam a alcançar o Caminho do Dragão em sua reclusão. O caminho até o monastério é longo e cansativo, servindo como a primeira prova de resiliência para qualquer um que busque seu conhecimento."
+                    }
+                ],
+                faccoes: [
+                    {
+                        id: "bardos",
+                        nome: "Bardos",
+                        resumo: "Historiadores, contadores de histórias e músicos itinerantes que preservam o conhecimento de uma civilização perdida.",
+                        desc: "<p>Descartar os bardos como sendo músicos e contadores de histórias comuns faz um desserviço à longa tradição desses apresentadores itinerantes, pois os bardos existem praticamente desde que existem as pessoas. Eles estiveram entre os primeiros a preservarem a música da antiguidade, a registrarem os grandes eventos da história e a protegerem dos inimigos da civilização tudo aquilo que aprenderam. A chegada de um bardo frequentemente é motivo de grande celebração, pois os espetáculos bárdicos não têm comparação.</p><p class='mt-4'>Os bardos formam uma sociedade vaga de historiadores, musicistas, contadores de história, atores e outros apresentadores. Acredita-se que venham de uma terra perdida no Grande Cataclismo que inundou muito do mundo, e o conhecimento que preservaram de sua civilização antes poderosa tenha permitido a formação do Império no norte, apesar de, infelizmente, terem fracassado em transmitir a sabedoria para usar esse conhecimento com responsabilidade.</p><p class='mt-4'>Alguns poucos bardos viajam pelos confins. Figuras famosas, estas incluem Alyce Trova-de-Mel, Byron Pé-de-Pau, e Wren Vagante.</p>"
+                    },
+                    {
+                        id: "corvos",
+                        nome: "Corvos",
+                        resumo: "A guilda de assassinos e ladrões mais notória de Allara, atuando nas sombras de Pedra Branca e Sanguine.",
+                        desc: "<p>Os Corvos são a guilda de assassinos e ladrões mais notória e eficiente de Allara, originada nas sombras de Pedra Branca, mas com agentes operando em todo o continente. Embora prestem serviços a quem puder pagar, sua influência se concentra especialmente na capital e em seu submundo, Sanguine, onde mantêm uma relação de interdependência cautelosa com a Rainha da Graça e Sangue e seus dampiros. O credo dos Corvos é simples: o contrato é lei, e a discrição é a arma suprema.</p><p class='mt-4'>Seus membros são mestres em infiltração, coleta de informações, uso de venenos e eliminação silenciosa. Eles são identificáveis por usarem máscaras de bico de corvo durante a execução de trabalhos de alto risco. A liderança dos Corvos é mantida em sigilo absoluto; o chefe, conhecido apenas como o <strong>Mestre dos Corvos</strong>, nunca é visto. Rumores sugerem que o Mestre dos Corvos pode ser alguém de alta posição na sociedade, talvez até mesmo um dos magos da Torre de Marfim.</p>"
+                    },
+                    {
+                        id: "druidas",
+                        nome: "Druidas",
+                        resumo: "Grupo pequeno e manipulador com uma agenda secreta, que busca um objetivo final desconhecido.",
+                        desc: "<p>Não mais do que meia dúzia de druidas vivem nos confins, mas eles têm considerável influência. Os druidas têm uma agenda secreta e fazem progressos pontuais prestando o seu suporte a vários povos e figuras, somente para abandoná-los quando tiverem cumprido o seu propósito. Para qual fim eles trabalham, ninguém sabe, exceto os próprios druidas.</p><p class='mt-4'>Os druidas vestem capas pretas encapuzadas bastante distintas e nunca viajam sem elas. Poucos têm algo de bom a dizer sobre os druidas. As pessoas os veem como intrometidos, criadores de intrigas e manipuladores. O druida mais poderoso e conhecido nos confins é <strong>Kalaman, o Negro</strong>, cujo paradeiro é atualmente desconhecido.</p>"
+                    },
+                    {
+                        id: "guardioes",
+                        nome: "Guardiões",
+                        resumo: "A ordem militar que defende o Baluarte, a muralha do extremo norte, contra os horrores da Devastação.",
+                        desc: "<p>Os Guardiões são a ordem militar dedicada a guarnecer o Baluarte, a maciça muralha de gelo e pedra no extremo norte que barra o caminho dos horrores da Devastação. Jurados à vigilância eterna e ao sacrifício, os Guardiões representam a última esperança de que a corrupção do Antigo Império não consumirá o resto da Velha Pátria.</p><p class='mt-4'>Seu código é o sacrifício e a lealdade à civilização. No entanto, o colapso do Grande Reino tem sido desastroso para a Ordem. O financiamento cessou, suprimentos são escassos, e o moral está sob pressão constante. Apesar do abandono do sul, a liderança atual, sob o comando do valoroso <strong>Comandante Ironhand</strong>, consegue inspirar os Guardiões a manterem a linha.</p>"
+                    },
+                    {
+                        id: "igreja",
+                        nome: "Igreja do Altivo",
+                        resumo: "A fé oficial do Grande Reino, busca restaurar a ordem após o regicídio e adora o Altivo (Redentor).",
+                        desc: "<p>Uma minúscula seita herética que derrubou a fé dominante e expulsou os Velhos Deuses do Grande Reino há quinhentos anos. A Igreja do Altivo se tornou a crença oficial após a Princesa Rhena liderar uma revolta bem-sucedida em nome da divindade.</p><p class='mt-4'>A doutrina da Igreja afirma que o Altivo veio à Terre para salvar os mortais da morte e abrir os portões do Paraíso, que estavam ocupados pelo <strong>Adversário</strong>. O Altivo derrotou o Adversário e o prendeu na Perdição.</p><p class='mt-4'>Desde a queda do Grande Reino, a Igreja do Altivo tem lutado para desarmar a crescente violência, comprometendo seus guerreiros sagrados à causa de restaurar a ordem. Sacerdotes do Altivo vestem roubas brancas decoradas com um cometa.</p>"
+                    },
+                    {
+                        id: "magos",
+                        nome: "Magos",
+                        resumo: "Usuários de magia de elite da Torre de Marfim, desesperados para manter sua hegemonia e codificar a magia.",
+                        desc: "<p>Os magos do oeste são os usuários de magia mais proeminentes na Velha Pátria. Na Torre de Marfim, eles trabalhavam para codificar os métodos corretos de usar magia e se tornarem a mais alta autoridade. Agora que o Grande Reino... se envolveu em uma terrível guerra civil, os magos estão desesperados para controlar os seus destinos e salvar o que resta do seu domínio.</p><p class='mt-4'>Muitos farsantes também aproveitaram as oportunidades criadas pelo caos. Verdadeiros magos odeiam essas pessoas e, quando as encontram, destroem o farsante. O único verdadeiro mago que sabidamente vive nos confins é <strong>Sajme, o Verde</strong>, que recentemente passou a morar em Quatro Torres.</p>"
+                    },
+                    {
+                        id: "monasterio",
+                        nome: "Monastério Punho do Dragão do Oeste",
+                        resumo: "Monges guerreiros devotos de Draconus que buscam o Caminho do Dragão, técnica lendária inspirada em dragões em combate.",
+                        desc: "<p>O Monastério Punho do Dragão do Oeste, aninhado nos Mil Degraus da montanha oriental, é a sede de uma ordem de monges guerreiros. Eles são devotos de Draconus, um dos Velhos Deuses da Ordem e do Tempo, e dedicam-se ao treinamento do corpo e da mente para alcançar o que chamam de <strong>Caminho do Dragão</strong>.</p><p class='mt-4'><strong>Lendas dizem que a técnica do Punho do Dragão emergiu da observação de dois dragões lutando até a morte.</strong> Aqueles que dominam a técnica relatam que um dragão aparece em seu corpo, como se tatuado na pele, e se move para os braços ou serpenteia no torso durante a luta.</p><p class='mt-4'>O Monastério guarda as <strong>Escamas Sacras</strong>, onde supostamente as verdades secretas de Draconus foram registradas. A Igreja do Altivo permite o monastério, pois a doutrina da Igreja afirma que Draconus foi o único dos Velhos Deuses que reconheceu o lugar de direito do Altivo.</p>"
+                    },
+                    {
+                        id: "paladinos",
+                        nome: "Paladinos",
+                        resumo: "Antiga guarda de elite da Coroa, responsável pelo regicídio; agora divididos e caçados, lutando por um governo de virtude.",
+                        desc: "<p>A Ordem dos Paladinos era a guarda de elite do Grande Reino. Seu ato de regicídio — o assassinato do Rei e a eliminação da maior parte da Família Real — foi o evento que precipitou a guerra civil.</p><p class='mt-4'>Eles justificam seu terrível ato alegando que o Rei havia traído seu juramento e permitido que a corrupção levasse o povo à ruína. No entanto, o ato os marcou como traidores e os Paladinos agora estão divididos e caçados. O grupo principal, liderado pelo <strong>Grão-Mestre Valerius</strong>, luta para instalar um governo de virtude e meritocracia, mas a maioria os enxerga como a causa do caos.</p>"
+                    },
+                    {
+                        id: "patrulheiros",
+                        nome: "Patrulheiros",
+                        resumo: "Sociedade de elite de guerreiros honrados e especialistas em sobrevivência que protegem os indefesos e vagam pela natureza.",
+                        desc: "<p>Quando Roland, primeiro de seu nome, fundou o Grande Reino, ele despachou os seus cavaleiros mais reais para vagarem pela natureza e descobrirem o mundo, ajudando aqueles em necessidade e defendendo os indefesos. Destes descendem os patrulheiros dos confins.</p><p class='mt-4'>Uma sociedade de elite composta por guerreiros honrados, habilidosos em sobrevivência e conhecimento da natureza, os patrulheiros vão aonde outros não ousam ir. Eles enfrentam todos os servos do mal. Quando um gigante pisoteia fazendas, os patrulheiros muitas vezes são os primeiros a responder.</p><p class='mt-4'>Os patrulheiros nunca foram numerosos, e seus números encolheram. Os verdadeiros patrulheiros ficam atentos em busca de indivíduos talentosos e podem aceitá-los como escudeiros.</p>"
+                    }
+                ]
+            };
 
+            const mainNavButtons = document.querySelectorAll('#main-nav button, #main-nav-mobile button');
+            const contentSections = document.querySelectorAll('.content-section');
 
+            const regioesContent = document.getElementById('regioes-content');
+            const regiaoFilters = document.getElementById('regiao-filters');
+            const regiaoSearch = document.getElementById('regiao-search');
 
+            const faccoesResumoTable = document.getElementById('faccoes-resumo-table');
+            const faccoesList = document.getElementById('faccoes-list');
+            const faccaoDetail = document.getElementById('faccoes-detail');
+            const faccaoSearch = document.getElementById('faccao-search');
 
+            function showSection(targetId) {
+                contentSections.forEach(section => {
+                    section.classList.toggle('active', section.id === targetId);
+                });
+                mainNavButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.target === targetId);
+                });
+            }
 
+            mainNavButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    showSection(button.dataset.target);
+                });
+            });
 
+            function renderRegioes(regiaoFiltro = 'Todos', buscaTermo = '') {
+                regioesContent.innerHTML = '';
+                const termo = buscaTermo.toLowerCase();
 
+                const regioesFiltradas = db.regioes.filter(local => {
+                    const matchRegiao = (regiaoFiltro === 'Todos' || local.regiao === regiaoFiltro);
+                    const matchBusca = (local.nome.toLowerCase().includes(termo) || local.desc.toLowerCase().includes(termo));
+                    return matchRegiao && matchBusca;
+                });
 
+                if (regioesFiltradas.length === 0) {
+                    regioesContent.innerHTML = `<p class="text-gray-500 col-span-full">Nenhum local encontrado para os filtros selecionados.</p>`;
+                    return;
+                }
 
+                regioesFiltradas.forEach(local => {
+                    const card = document.createElement('div');
+                    card.className = 'card regiao-card';
+                    card.innerHTML = `
+                        <h3 class="text-2xl font-semibold text-primary mb-2">${local.nome}</h3>
+                        <span class="text-xs font-medium bg-primary text-white px-2 py-0.5 rounded-full mb-4 inline-block">${local.regiaoNome}</span>
+                        <p class="text-gray-700 leading-relaxed">${local.desc}</p>
+                    `;
+                    regioesContent.appendChild(card);
+                });
+            }
 
+            regiaoFilters.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#regiao-filters button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderRegioes(e.target.dataset.regiao, regiaoSearch.value);
+                }
+            });
 
+            regiaoSearch.addEventListener('input', () => {
+                const filtroAtivo = document.querySelector('#regiao-filters button.active').dataset.regiao;
+                renderRegioes(filtroAtivo, regiaoSearch.value);
+            });
 
+            function renderFaccoesList(buscaTermo = '') {
+                faccoesList.innerHTML = '';
+                const termo = buscaTermo.toLowerCase();
 
+                const faccoesFiltradas = db.faccoes.filter(faccao => faccao.nome.toLowerCase().includes(termo));
 
+                if (faccoesFiltradas.length === 0) {
+                    faccoesList.innerHTML = `<p class="text-gray-500 p-2">Nenhuma facção encontrada.</p>`;
+                }
 
+                faccoesFiltradas.forEach(faccao => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-button text-left';
+                    button.textContent = faccao.nome;
+                    button.dataset.id = faccao.id;
+                    button.addEventListener('click', () => {
+                        renderFaccaoDetail(faccao.id);
+                        document.querySelectorAll('#faccoes-list button').forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    });
+                    faccoesList.appendChild(button);
+                });
 
+                // Seleciona a primeira facção por padrão ao renderizar, se houver
+                if (faccoesFiltradas.length > 0 && !document.querySelector('#faccoes-list button.active')) {
+                    faccoesList.querySelector('button').click();
+                }
+            }
 
+            function renderFaccaoDetail(faccaoId) {
+                const faccao = db.faccoes.find(f => f.id === faccaoId);
+                if (faccao) {
+                    faccaoDetail.innerHTML = `
+                        <h3 class="text-2xl font-semibold text-primary mb-4">${faccao.nome}</h3>
+                        <div class="space-y-4 text-gray-700 leading-relaxed">${faccao.desc}</div>
+                    `;
+                }
+            }
 
+            function populateFaccaoResumo() {
+                db.faccoes.forEach(faccao => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${faccao.nome}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${faccao.resumo}</td>
+                    `;
+                    faccoesResumoTable.appendChild(row);
+                });
+            }
 
+            faccaoSearch.addEventListener('input', () => {
+                renderFaccoesList(faccaoSearch.value);
+            });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+            renderRegioes();
+            renderFaccoesList();
+            populateFaccaoResumo();
+            showSection('visao-geral');
+        });
+    </script>
 </body>
 
 </html>
