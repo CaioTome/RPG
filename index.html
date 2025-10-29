@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O Grande Reino - Cenário de RPG</title>
+    <title>O Grande Reino</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -127,7 +127,7 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
     <div class="max-w-7xl mx-auto bg-white p-6 md:p-10 rounded-2xl shadow-2xl">
         <header class="mb-8">
             <h1 class="text-4xl font-extrabold text-primary mb-2">O Grande Reino</h1>
-            <p class="text-lg text-gray-600">Um Cenário de Fantasia e Conflito para RPG.</p>
+            <p class="text-lg text-gray-600">O maior reino de Allara</p>
         </header>
 
         <!-- Navegação Principal (Desktop) -->
@@ -152,7 +152,7 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
 
         <!-- SEÇÃO 1: VISÃO GERAL (ATIVA POR PADRÃO) -->
         <section id="visao-geral" class="content-section active">
-            <h2 class="text-3xl font-bold text-primary mb-6">A Velha Pátria em Guerra</h2>
+            <h2 class="text-3xl font-bold text-primary mb-6">Allara, A Velha Pátria</h2>
             <div class="space-y-6 text-gray-700 leading-relaxed">
                 <p>Refugiados e colonos conhecem e se referem a Allara, as terras ao norte e a oeste dos confins, como a
                     <strong>Velha Pátria</strong>, pois foi lá que a maioria dos seus ancestrais nasceu. As pessoas
@@ -197,9 +197,9 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
         <!-- SEÇÃO 2: REGIÕES E LOCAIS -->
         <section id="regioes" class="content-section">
             <h2 class="text-3xl font-bold text-primary mb-6">Regiões e Locais</h2>
-            <p class="text-gray-700 mb-6">Explore os cinco grandes territórios do Grande Reino, desde a Taiga congelada
+            <p class="text-gray-700 mb-6">Explore as cinco regiões do Grande Reino, desde a Taiga congelada
                 até o
-                Mar do Medo. Use os filtros para visualizar os locais por região.</p>
+                Mar do Medo.</p>
 
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div id="regiao-filters" class="flex flex-wrap gap-2">
@@ -217,11 +217,12 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
         <!-- SEÇÃO 3: CASAS NOBRES -->
         <section id="casas-nobres" class="content-section">
             <h2 class="text-3xl font-bold text-primary mb-6">Grandes Casas Nobres</h2>
-            <p class="text-gray-700 mb-6">O Grande Reino era estruturado sob a autoridade de quatro Grandes Casas, cada
+            <p class="text-gray-700 mb-6">O Grande Reino era estruturado sob a autoridade da Casa Targaryen que
+                governava quatro Grandes Casas, cada
                 uma
                 dominando uma região. O colapso real levou estas Casas a lutarem para proteger seu legado ou reivindicar
                 o
-                poder central. Filtre pelo seu território de origem.</p>
+                poder central.</p>
 
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
                 <div id="casas-filters" class="flex flex-wrap gap-2">
@@ -241,8 +242,7 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
         <section id="faccoes" class="content-section">
             <h2 class="text-3xl font-bold text-primary mb-6">Facções e Guildas</h2>
             <p class="text-gray-700 mb-6">O poder no Grande Reino está fragmentado. Explore as várias facções, guildas e
-                ordens que lutam pelo controle, influência ou simplesmente pela sobrevivência. Clique em uma facção na
-                lista para ver seus objetivos, líderes e segredos.</p>
+                ordens que lutam pelo controle, influência ou simplesmente pela sobrevivência.</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-1">
@@ -306,7 +306,7 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
                     regiaoNome: "Norte - Taiga",
                     desc: "Vasta tumba subterrânea de um lendário conquistador, guardada por seus guerreiros mortos-vivos (Draugr). O próprio Lorde Invernal se recusou a aceitar o fim e se transformou em um poderoso Liche, ancorando sua alma para garantir que seu corpo reanime incessantemente."
                 },
-                // Leste (Mata Arcaica Substitui Passo de Ferro)
+                // Leste
                 {
                     nome: "Ninho da Águia",
                     regiao: "Leste",
@@ -365,7 +365,7 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
                 }
             ],
 
-            // Nova Estrutura para Casas Nobres
+            //Casas Nobres
             casas: [
                 {
                     nome: "Casa Targaryen",
@@ -621,7 +621,7 @@ Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo
                     card.className = 'card';
                     card.innerHTML = `
                         <h3 class="text-2xl font-bold text-primary mb-2">${casa.nome}</h3>
-                        <p class="text-sm font-semibold text-gray-600 mb-4">Slogan: <span class="text-gray-800 italic">${casa.slogan || 'Não definido'}</span></p>
+                        <p class="text-sm font-semibold text-gray-600 mb-4">Lema: <span class="text-gray-800 italic">${casa.slogan || 'Não definido'}</span></p>
                         <p class="text-xs font-medium text-gray-500 uppercase">Região de Origem: <strong>${casa.regiao}</strong></p>
                         
                         <div class="mt-4 pt-3 border-t border-gray-100">
