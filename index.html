@@ -4,160 +4,706 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O Grande Reino</title>
+    <title>O Grande Reino - Cenário de RPG</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo Escuro) -->
-    <!-- Application Structure Plan: SPA com navegação principal por abas (Visão Geral, Regiões, Facções). A 'Visão Geral' apresenta a introdução. 'Regiões' usa um subfiltro de botões para selecionar uma região (Norte, Sul, etc.) e exibe os locais dessa região em cards. 'Facções' usa um layout similar, com botões para selecionar uma facção e exibir seus detalhes. Uma barra de busca em 'Regiões' e 'Facções' permite filtrar o conteúdo dinamicamente. Esta estrutura foi escolhida para quebrar o 'worldbuilding' denso em pedaços gerenciáveis, permitindo ao usuário focar no que precisa (explorar uma área ou entender um grupo) sem ser sobrecarregado por uma parede de texto. -->
-    <!-- Visualization & Content Choices: 
-    - Introdução (Lore) -> Informar -> Bloco de texto estático -> N/A (Leitura) -> HTML/Tailwind.
-    - Regiões e Locais -> Organizar/Explorar -> Botões de Filtro (por Região) + Cards de Conteúdo (para Locais) -> Interação: Clique (Botão) mostra/oculta locais; Busca (Input) filtra cards -> JS para filtrar e renderizar HTML dinâmico.
-    - Facções e Guildas -> Organizar/Explorar -> Botões de Filtro (por Facção) + Card de Conteúdo (para Detalhes) -> Interação: Clique (Botão) mostra detalhes; Busca (Input) filtra lista de facções -> JS para filtrar e renderizar HTML dinâmico.
-    - Resumo das Facções -> Informar/Organizar -> Tabela HTML Estática -> N/A (Leitura) -> HTML/Tailwind.
-    - Justificativa: A interatividade (filtros, busca, mostrar/ocultar) é focada em gerenciar a exibição de texto, pois o relatório fonte é 100% qualitativo. Não há dados para gráficos. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --color-primary: #49244f;
+            /* Roxo Escuro */
+            --color-primary-light: #6a3674;
+            --color-accent: #f0f4f8;
+            /* Cinza Claro Suave */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            text-align: justify;
+        }
+
+        strong {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .nav-button {
+            @apply px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-[var(--color-accent)] transition-colors;
+        }
+
+        .nav-button.active {
+            background-color: var(--color-primary);
+            color: white;
+            @apply hover:bg-[var(--color-primary-light)] shadow-md;
+        }
+
+        .filter-button {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+            @apply px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm;
+        }
+
+        .filter-button.active {
+            background-color: var(--color-primary);
+            color: white;
+            @apply hover:bg-[var(--color-primary-light)] shadow-md;
+        }
+
+        .text-primary {
+            color: var(--color-primary);
+        }
+
+        .bg-primary {
+            background-color: var(--color-primary);
+        }
+
+        .card {
+            @apply bg-white p-6 rounded-xl shadow-lg border border-gray-100 transition-shadow hover:shadow-xl;
+        }
+
+        .content-section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Estilo para a lista de facções/casas no painel lateral */
+        #faccoes-list button,
+        #casas-list button {
+            @apply w-full border border-gray-200 filter-button;
+        }
+    </style>
+
+    <!--
+O Grande Reino - Worldbuilding SPA
+
+Chosen Palette: Realeza Sombria (bg-white, text-gray-800, accent: #49244f - Roxo Escuro)
+ *
+ * ESTRUTURA E FLUXO DO APLICATIVO:
+ * --------------------------------
+ * Este é um aplicativo de página única (SPA) baseado em JavaScript Vanilla e Tailwind CSS,
+ * projetado para apresentar conteúdo de worldbuilding (Regiões, Locais e Facções) de forma
+ * interativa. O aplicativo simula a navegação entre seções sem recarregar a página, usando
+ * a visibilidade de elementos HTML (trocando a classe 'active').
+ *
+ * 1. Módulos: Importa o objeto 'db' do arquivo './db.js', que atua como a fonte única de
+ * dados (dados estáticos).
+ * 2. Inicialização: Toda a lógica é encapsulada em um listener 'DOMContentLoaded' para
+ * garantir que o DOM esteja completamente carregado antes de manipular os elementos.
+ * 3. Navegação Principal: A função `showSection()` gerencia a exibição das seções
+ * (Visão Geral, Regiões, Facções) e atualiza o estado dos botões de navegação.
+ * 4. Renderização de Conteúdo: Funções específicas (`renderRegioes`, `renderFaccoes`,
+ * `renderFaccaoDetail`) são responsáveis por ler os dados do `db.js`, aplicar filtros/buscas
+ * e injetar o HTML dinâmico nas seções correspondentes.
+ * 5. Interação: Listeners de eventos são anexados aos botões de navegação, filtros e campos
+ * de busca para acionar as funções de navegação e renderização em tempo real.
+ *
+ * VARIÁVEIS GLOBAIS (Elementos DOM):
+ * ---------------------------------
+ * - mainNavButtons: Botões da navegação principal para controle da função showSection.
+ * - contentSections: Elementos principais que contêm o conteúdo de cada seção.
+ * - regioesContent: Container onde os cards de locais das regiões são injetados.
+ * - regiaoFilters: Container para os botões de filtro por Região.
+ * - regiaoSearch: Input de busca para a seção Regiões.
+ * - faccoesList: Container para os botões de lista de Facções.
+ * - faccaoDetail: Container onde o detalhe de uma Facção selecionada é injetado.
+ * - faccaoSearch: Input de busca para a seção Facções.
+ *
+ * FUNÇÕES PRINCIPAIS:
+ * -------------------
+ * - showSection(targetId): Controla a visibilidade das seções de conteúdo e o estado dos botões de navegação.
+ * - renderRegioes(regiaoFiltro, buscaTermo): Filtra e renderiza os cards de locais na seção Regiões.
+ * - renderRegiaoFilters(): Cria os botões de filtro (Norte, Sul, etc.) para a seção Regiões.
+ * - renderFaccoes(buscaTermo): Filtra e renderiza a lista de botões de Facções.
+ * - renderFaccaoDetail(faccaoId): Exibe o conteúdo detalhado da Facção selecionada.
+ */-->
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
 
-    <header class="bg-white shadow-lg sticky top-0 z-10">
-        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex-shrink-0">
-                    <h1 class="text-2xl font-extrabold text-primary">O Grande Reino</h1>
-                </div>
-                <div class="hidden sm:block sm:ml-6">
-                    <div class="flex space-x-2" id="main-nav">
-                        <button class="nav-button active" data-target="visao-geral">Visão Geral</button>
-                        <button class="nav-button" data-target="regioes">Regiões e Locais</button>
-                        <button class="nav-button" data-target="faccoes">Facções e Guildas</button>
-                    </div>
-                </div>
-            </div>
+    <div class="max-w-7xl mx-auto bg-white p-6 md:p-10 rounded-2xl shadow-2xl">
+        <header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-primary mb-2">O Grande Reino</h1>
+            <p class="text-lg text-gray-600">Um Cenário de Fantasia e Conflito para RPG.</p>
+        </header>
+
+        <!-- Navegação Principal (Desktop) -->
+        <nav id="main-nav" class="hidden md:flex space-x-2 p-2 bg-gray-100 rounded-xl mb-8 shadow-inner">
+            <button class="nav-button active" data-target="visao-geral">Visão Geral</button>
+            <button class="nav-button" data-target="regioes">Regiões e Locais</button>
+            <button class="nav-button" data-target="casas-nobres">Casas Nobres</button>
+            <button class="nav-button" data-target="faccoes">Facções e Guildas</button>
         </nav>
-        <div class="sm:hidden p-4 bg-white shadow-md">
-            <div class="flex space-x-2 justify-center" id="main-nav-mobile">
-                <button class="nav-button active" data-target="visao-geral">Visão Geral</button>
-                <button class="nav-button" data-target="regioes">Regiões</button>
-                <button class="nav-button" data-target="faccoes">Facções</button>
-            </div>
+
+        <!-- Navegação Principal (Mobile - Dropdown) -->
+        <div class="md:hidden mb-8">
+            <select id="main-nav-mobile"
+                class="w-full p-3 border border-gray-300 rounded-lg text-lg font-medium text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                <option value="visao-geral">Visão Geral</option>
+                <option value="regioes">Regiões e Locais</option>
+                <option value="casas-nobres">Casas Nobres</option>
+                <option value="faccoes">Facções e Guildas</option>
+            </select>
         </div>
-    </header>
 
-    <main class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
+        <!-- SEÇÃO 1: VISÃO GERAL (ATIVA POR PADRÃO) -->
         <section id="visao-geral" class="content-section active">
-            <div class="card">
-                <h2 class="text-3xl font-bold text-primary mb-6">A Queda do Grande Reino</h2>
-                <div class="space-y-4 text-gray-700 leading-relaxed">
-                    <p>Refugiados e colonos conhecem e se referem a <strong>Allara</strong>, as terras ao norte e a oeste dos <strong>Confins</strong>,
-                        como a Velha Pátria, pois foi lá que a maioria dos seus ancestrais nasceu. As pessoas vivem em
-                        Allara há mais de mil anos, e o continente recebeu seu nome pelos humanos que primeiro se
-                        assentaram em seus ricos vales, mas que foram posteriormente deslocados por colonizadores do
-                        Império no noroeste distante. Allara também tem a distinção de ser o local de nascimento dos
-                        <strong>grandes reinos anões</strong>: suas poderosas fortalezas, muitas das quais agora em ruínas, ainda podem
-                        ser vistas no alto das montanhas.</p>
-                    <p>A Velha Pátria poderia ter se salvado se não tivesse ignorado os sinais de alerta. O continente
-                        exibia cerca de quarenta nações diferentes, com mais de cem políticas diferentes dentro de uma
-                        nação, e todas estavam à sombra do Grande Reino, um vasto e rico território que havia dominado a
-                        política internacional a séculos. O ressentimento pela riqueza do <strong>Grande Reino</strong>, a sua falta de
-                        respeito ou consideração por seus vizinhos, e a sua <strong>decadência</strong> alimentaram o ressentimento dos
-                        reinos menores, que esperaram pela oportunidade de trazer o fim do seu domínio.</p>
-                    <p>A população de Allara havia crescido sem limites conforme as melhorias na medicina e no
-                        saneamento permitiam às pessoas viver mais e ter filhos com mais segurança. Porém, as técnicas
-                        agrícolas ruins nas nações mais pobres levavam a <strong>fomes</strong> disseminadas, pioradas por uma série de
-                        fortes <strong>secas</strong> que deixaram o continente inteiro com falta de água. Quando <strong>a peste</strong> atingiu as
-                        cidades costeiras e se espalhou para o interior do continente, matando uma em cada quatro
-                        pessoas, as nações selaram as suas fronteiras, recusaram auxílio e cometeram atrocidades para
-                        proteger suas próprias populações. <strong>Orcs</strong>, pessoas distorcidas em monstros por uma doença da alma,
-                        começaram a aparecer nas áreas rurais, formando bandos e derrubando governos para queimar tudo
-                        até restar somente cinzas.</p>
-                    <p>O Grande Reino poderia ter intervindo, aberto os seus cofres e as suas fronteiras para aliviar o
-                        sofrimento, mas os seus governantes corruptos e ineficientes, assolados por sicofantas que
-                        buscavam se enriquecer de todas as maneiras possíveis, significaram que a nação mais poderosa do
-                        continente nada fez. Qualquer chance do Grande Reino mudar a sua posição chegou ao fim quando os
-                        <strong>paladinos</strong>, uma ordem de cavaleiros virtuosos encarregados de proteger a Coroa, se voltaram
-                        contra o seu rei, matando-o e <strong>eliminando a maior parte da família real</strong>. Reivindicações de Pedra
-                        Branca, o trono de poder do reino, vieram de todos os lados, precipitando uma <strong>guerra civil</strong> que
-                        continua até os dias de hoje.</p>
-                    <p>Resta a esperança de que a sanidade irá prevalecer e que as pessoas irão se unir para combater as
-                        ameaças que operam para desmantelar o mundo civilizado, mas muitas pessoas desistiram a ponto de
-                        abandonar as suas antigas vidas em prol de um futuro incerto nos <strong>Confins</strong>. Mesmo com a ganância e
-                        a ambição sabotando os esforços de restaurar a ordem, as pessoas que decidirem ficar para trás
-                        lutam por seus lares e por um futuro, bem como para preservar a terra para os seus descendentes.
-                    </p>
-                </div>
+            <h2 class="text-3xl font-bold text-primary mb-6">A Velha Pátria em Guerra</h2>
+            <div class="space-y-6 text-gray-700 leading-relaxed">
+                <p>Refugiados e colonos conhecem e se referem a Allara, as terras ao norte e a oeste dos confins, como a
+                    <strong>Velha Pátria</strong>, pois foi lá que a maioria dos seus ancestrais nasceu. As pessoas
+                    vivem em
+                    Allara há mais de mil anos, e o continente recebeu seu nome pelos humanos que primeiro se assentaram
+                    em
+                    seus ricos vales.
+                </p>
+
+                <p>O continente exibia cerca de quarenta nações diferentes, e todas estavam à sombra do <strong>Grande
+                        Reino</strong>, um vasto e rico território que havia dominado a política internacional a
+                    séculos. O
+                    ressentimento pela riqueza do Grande Reino, a sua falta de consideração por seus vizinhos e a sua
+                    decadência
+                    alimentaram a revolta dos reinos menores.</p>
+
+                <p>Quando a peste atingiu as cidades costeiras, matando uma em cada quatro pessoas, as nações selaram as
+                    suas
+                    fronteiras. Orcs, pessoas distorcidas em monstros por uma doença da alma, começaram a aparecer nas
+                    áreas
+                    rurais. O Grande Reino poderia ter intervindo, mas seus governantes corruptos e ineficientes nada
+                    fizeram.
+                    Qualquer chance de mudança chegou ao fim quando os <strong>Paladinos</strong>, uma ordem de
+                    cavaleiros virtuosos,
+                    se
+                    voltaram contra o seu rei, matando-o e eliminando a maior parte da família real. Reivindicações pela
+                    <strong>Pedra Branca</strong>, o trono de poder do reino, precipitaram uma <strong>guerra
+                        civil</strong> que continua até os
+                    dias
+                    de hoje.
+                </p>
+
+                <p>Resta a esperança de que a sanidade irá prevalecer, mas muitas pessoas desistiram a ponto de
+                    abandonar as
+                    suas antigas vidas em prol de um futuro incerto. Mesmo com a ganância e a ambição sabotando os
+                    esforços de
+                    restaurar a ordem, aqueles que ficam lutam por seus lares e por um futuro para seus descendentes.
+                </p>
             </div>
         </section>
 
+        <!-- SEÇÃO 2: REGIÕES E LOCAIS -->
         <section id="regioes" class="content-section">
-            <h2 class="text-3xl font-bold text-primary mb-6">Explorar Regiões e Locais</h2>
-            <p class="text-gray-700 mb-6">Navegue pelas diferentes regiões do Grande Reino para descobrir os locais
-                notáveis, cidades e ruínas perigosas que definem o continente. Use a barra de busca para encontrar um
-                local específico ou filtre por região usando os botões.</p>
+            <h2 class="text-3xl font-bold text-primary mb-6">Regiões e Locais</h2>
+            <p class="text-gray-700 mb-6">Explore os cinco grandes territórios do Grande Reino, desde a Taiga congelada
+                até o
+                Mar do Medo. Use os filtros para visualizar os locais por região.</p>
 
-            <div class="mb-6">
-                <input type="text" id="regiao-search" placeholder="Buscar local..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 ring-primary:focus">
-            </div>
-
-            <div class="flex flex-wrap gap-2 mb-8" id="regiao-filters">
-                <button class="filter-button active" data-regiao="Todos">Todos</button>
-                <button class="filter-button" data-regiao="Centro">Centro</button>
-                <button class="filter-button" data-regiao="Norte">Norte</button>
-                <button class="filter-button" data-regiao="Leste">Leste</button>
-                <button class="filter-button" data-regiao="Sul">Sul</button>
-                <button class="filter-button" data-regiao="Oeste">Oeste</button>
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
+                <div id="regiao-filters" class="flex flex-wrap gap-2">
+                    <!-- Botões de filtro gerados pelo JS -->
+                </div>
+                <input type="text" id="regiao-search" placeholder="Buscar localidade..."
+                    class="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="regioes-content">
+                <!-- Cards de locais gerados pelo JS -->
             </div>
         </section>
 
+        <!-- SEÇÃO 3: CASAS NOBRES -->
+        <section id="casas-nobres" class="content-section">
+            <h2 class="text-3xl font-bold text-primary mb-6">Grandes Casas Nobres</h2>
+            <p class="text-gray-700 mb-6">O Grande Reino era estruturado sob a autoridade de quatro Grandes Casas, cada
+                uma
+                dominando uma região. O colapso real levou estas Casas a lutarem para proteger seu legado ou reivindicar
+                o
+                poder central. Filtre pelo seu território de origem.</p>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
+                <div id="casas-filters" class="flex flex-wrap gap-2">
+                    <!-- Botões de filtro gerados pelo JS -->
+                </div>
+                <input type="text" id="casa-search" placeholder="Buscar Casa..."
+                    class="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="casas-content">
+                <!-- Cards de Casas Nobres gerados pelo JS -->
+            </div>
+        </section>
+
+
+        <!-- SEÇÃO 4: FACÇÕES E GUILDAS -->
         <section id="faccoes" class="content-section">
             <h2 class="text-3xl font-bold text-primary mb-6">Facções e Guildas</h2>
             <p class="text-gray-700 mb-6">O poder no Grande Reino está fragmentado. Explore as várias facções, guildas e
                 ordens que lutam pelo controle, influência ou simplesmente pela sobrevivência. Clique em uma facção na
                 lista para ver seus objetivos, líderes e segredos.</p>
 
-            <div class="card mb-8">
-                <h3 class="text-2xl font-semibold text-primary mb-4">Resumo das Facções</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Nome</th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Descrição Curta</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="faccoes-resumo-table">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-1">
                     <input type="text" id="faccao-search" placeholder="Buscar facção..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 ring-primary:focus mb-4">
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] mb-4">
                     <div class="flex flex-col space-y-2" id="faccoes-list">
+                        <!-- Lista de facções gerada pelo JS -->
                     </div>
                 </div>
                 <div class="md:col-span-2">
                     <div class="card min-h-[300px]" id="faccoes-detail">
-                        <p class="text-gray-500">Selecione uma facção da lista para ver os detalhes.</p>
+                        <p class="text-gray-500">Selecione uma facção da lista para ver seus detalhes.</p>
                     </div>
                 </div>
             </div>
         </section>
+    </div>
 
-    </main>
+    <script>
+        // =================================================================
+        // ESTRUTURA DE DADOS (DB)
+        // =================================================================
 
-    <script type="module" src="script.js"></script>
+        const db = {
+            regioes: [
+                // Centro
+                {
+                    nome: "Pedra Branca",
+                    regiao: "Centro",
+                    regiaoNome: "Centro - Pradaria",
+                    desc: "Pedra Branca, a capital do reino, é uma imponente cidade-fortaleza frequentemente referida como a Cidade Branca, erguida sobre a Montanha Solitária. Sua característica mais marcante é a sua estrutura defensiva colossal, composta por sete níveis concêntricos de construções e muralhas, todos esculpidos e construídos diretamente na colossal montanha branca; cada nível é coroado por um portão cuja entrada é estrategicamente deslocada em relação aos níveis inferior e superior, forçando o caminho em zigue-zague, até culminar na Cidadela no topo, onde a Torre Branca se ergue a mais de mil pés acima da pradaria dos Campos do Rei."
+                },
+                {
+                    nome: "Sanguine",
+                    regiao: "Centro",
+                    regiaoNome: "Centro - Pradaria",
+                    desc: "Uma vasta cidade subterrânea construída secretamente sob Pedra Branca. Sanguine foi estabelecida há muitos séculos pela Rainha Carmilla Targaryen como um refúgio para aqueles amaldiçoados pelo vampirismo. Agora, é o lar de Vampiros e Dampiros, que buscam sobreviver com o mínimo de consumo de sangue humano possível, tratando sua condição como uma doença e evitando a criação de novas 'Criaturas da Noite'. No entanto, facções dissidentes iniciaram ataques noturnos à superfície em Pedra Branca, ameaçando a paz."
+                },
+                {
+                    nome: "Torre de Marfim",
+                    regiao: "Centro",
+                    regiaoNome: "Centro - Pradaria",
+                    desc: "Uma ilha flutuante de arquitetura elegante e arrogante, mantida no ar por magia antiga. É o lar exclusivo dos Magos mais poderosos e pretensiosos do continente, que usam sua posição elevada para observar e tentar codificar o uso da magia no Grande Reino. A Torre é um símbolo de conhecimento inatingível e isolamento político."
+                },
+                // Norte
+                {
+                    nome: "Gelo Eterno",
+                    regiao: "Norte",
+                    regiaoNome: "Norte - Taiga",
+                    desc: "A maior cidade do Norte, escavada em uma montanha de gelo azulado e pedra maciça. Seus habitantes são robustos e estoicos, acostumados à escuridão do inverno e à ameaça constante que paira sobre o Baluarte. As lareiras de Gelo Eterno são a última linha de aquecimento e esperança antes do vazio gelado."
+                },
+                {
+                    nome: "Baluarte",
+                    regiao: "Norte",
+                    regiaoNome: "Norte - Taiga",
+                    desc: "Uma estrutura militar maciça de gelo e pedra, estendendo-se por quilômetros. É o lar da Ordem dos Guardiões, guerreiros abnegados que juraram proteger o reino da Devastação. O Baluarte é um lugar de vigília eterna e sacrifício."
+                },
+                {
+                    nome: "Tumba do Lorde Invernal",
+                    regiao: "Norte",
+                    regiaoNome: "Norte - Taiga",
+                    desc: "Vasta tumba subterrânea de um lendário conquistador, guardada por seus guerreiros mortos-vivos (Draugr). O próprio Lorde Invernal se recusou a aceitar o fim e se transformou em um poderoso Liche, ancorando sua alma para garantir que seu corpo reanime incessantemente."
+                },
+                // Leste (Mata Arcaica Substitui Passo de Ferro)
+                {
+                    nome: "Ninho da Águia",
+                    regiao: "Leste",
+                    regiaoNome: "Leste - Vales e Montanhas",
+                    desc: "Situada nas Montanhas da Lua, sob o pico conhecido como Lança do Gigante. Esta é a maior cidade do Leste e é famosa por ser quase inexpugnável. A cidade é um emaranhado de pontes de corda e edifícios de madeira fixados na face da montanha, com vistas deslumbrantes."
+                },
+                {
+                    nome: "Minas Profundas",
+                    regiao: "Leste",
+                    regiaoNome: "Leste - Vales e Montanhas",
+                    desc: "Uma vasta rede de ruínas anãs sob uma montanha, onde os ecos de um reino subterrâneo perdido ainda ressoam. A escuridão esconde não apenas armadilhas anãs, mas também criaturas corrompidas e famintas que veem qualquer luz invasora como um convite para a caça."
+                },
+                {
+                    nome: "Mata Arcaica",
+                    regiao: "Leste",
+                    regiaoNome: "Leste - Vales e Montanhas",
+                    desc: "Um vale antigo e de difícil acesso, conhecido por ser o lar de uma vasta população de Dragonetes, criaturas pacíficas e parentes distantes dos dragões. A área é governada pela ancestral <strong>Rainha Dragão</strong>. Embora a maioria dos Dragonetes seja inofensiva (apresentando a mesma ameaça de um gato de rua), eles são como humanos: uma chance muito pequena de se tornarem perigosos se forem ameaçados. Diz-se que, no lago cintilante da corte da Rainha Dragão, jaz um espelho que leva a outros mundos."
+                },
+                // Sul
+                {
+                    nome: "Pontalto",
+                    regiao: "Sul",
+                    regiaoNome: "Sul - Mar do Medo",
+                    desc: "A antiga maior cidade portuária, agora reduzida a ruínas negras e cinzas por um incêndio mágico de quarentena. Pontalto é um lembrete sombrio e devastado de como a febre colérica pode se espalhar. O local está sob vigilância rigorosa; o cheiro de cinzas, sal e morte ainda paira no ar."
+                },
+                {
+                    nome: "Oráldia",
+                    regiao: "Sul",
+                    regiaoNome: "Sul - Mar do Medo",
+                    desc: "O reino submerso de uma civilização antiga que ousou ofender os deuses. Suas torres de mármore e templos cintilam sob as águas escuras, mas o local irradia uma aura de profundo terror divino. Dizem que a cidade ainda está habitada por seres que sobreviveram ao Grande Cataclismo e foram transformados pela pressão e pela culpa dos deuses."
+                },
+                {
+                    nome: "Ilhas do Medo",
+                    regiao: "Sul",
+                    regiaoNome: "Sul - Mar do Medo",
+                    desc: "Um arquipélago traiçoeiro e gigantesco, onde a vida é uma luta constante. Aqui, culturas diversas e forasteiros lutam contra piratas incansáveis, ambientes hostis e os temíveis Nagas – o povo serpente, remanescentes do tecnologicamente avançado Império Thoniano."
+                },
+                // Oeste
+                {
+                    nome: "Grande Árvore",
+                    regiao: "Oeste",
+                    regiaoNome: "Oeste - Floresta Temperada",
+                    desc: "A maior cidade do Oeste, construída sob e dentro de uma árvore colossal. Seus níveis inferiores refletem a graça e a antiga arquitetura élfica, enquanto os níveis superiores, de construção humana, são uma imitação ambiciosa e apressada da majestade élfica, marcando o contraste entre a natureza e a ambição humana."
+                },
+                {
+                    nome: "Floresta de Arlathan",
+                    regiao: "Oeste",
+                    regiaoNome: "Oeste - Floresta Temperada",
+                    desc: "O que antes foi a gloriosa capital élfica agora é uma floresta temperada densa e selvagem, onde a natureza consumiu a civilização. A floresta está imbuída de uma magia élfica selvagem, tornando as expedições perigosas, mas itens de magia e poder são abundantes."
+                },
+                {
+                    nome: "Monastério Punho do Dragão do Oeste",
+                    regiao: "Oeste",
+                    regiaoNome: "Oeste - Floresta Temperada",
+                    desc: "Aninhado nos Mil Degraus da montanha oriental, este monastério de monges guerreiros é o auge da disciplina física e espiritual. Devotos de Draconus, eles se dedicam a alcançar o Caminho do Dragão em sua reclusão. O caminho até o monastério é longo e cansativo, servindo como a primeira prova de resiliência."
+                }
+            ],
+
+            // Nova Estrutura para Casas Nobres
+            casas: [
+                {
+                    nome: "Casa Targaryen",
+                    regiao: "Centro",
+                    slogan: "Fogo e Sangue",
+                    tema: "Decadência, Legitimidade Contestada, Últimos Sobreviventes, Domadores de Dragões.",
+                    status: "A linhagem real original, cuja maior parte foi eliminada pelos Paladinos. Seu governo era marcado pela riqueza e decadência. O pouco que resta da linhagem é alvo de caça ou está escondido, gerando inúmeras reivindicações ao trono."
+                },
+                {
+                    nome: "Casa Stark",
+                    regiao: "Norte",
+                    slogan: "O Inverno Está Chegando",
+                    tema: "Dever, Sacrifício, Sobrevivência contra a Devastação.",
+                    status: "Robustos e estoicos, são a principal força por trás dos Guardiões no Baluarte. Seu foco está menos na guerra civil do sul e mais na ameaça constante da Devastação. O colapso do reino os forçou a uma posição de extrema autossuficiência e amargura."
+                },
+                {
+                    nome: "Casa Arryn",
+                    regiao: "Leste",
+                    slogan: "Tão Alto Quanto a Honra",
+                    tema: "Isolamento, Altivez, Inação Estratégica.",
+                    status: "A Casa mais isolada e defensiva, abrigada em sua cidade inexpugnável (Ninho da Águia). Eles têm mantido uma neutralidade cautelosa na guerra civil, preferindo observar os eventos de cima, o que os torna alvos de desconfiança e ressentimento."
+                },
+                {
+                    nome: "Casa Greyjoy",
+                    regiao: "Sul",
+                    slogan: "Nós Não Semeamos",
+                    tema: "Reconstrução, Riquezas e Oportunismo.",
+                    status: "Anteriormente a Casa que controlava o maior porto (Pontalto), foram arruinados pela devastação. Sua base de poder foi destruída. A Casa está dispersa, lutando para recuperar o prestígio nas Ilhas do Medo e buscando ativamente vingança."
+                },
+                {
+                    nome: "Casa Tyrell",
+                    regiao: "Oeste",
+                    slogan: "Crescendo Fortes",
+                    tema: "Diplomacia, Ecologia, Abundância em Meio à Escassez.",
+                    status: "Conhecida por sua profunda conexão com a natureza e por proteger o legado élfico. Eles são uma das poucas Casas que ainda tenta manter as rotas comerciais abertas, fornecendo alimentos e recursos para quem pagar."
+                }
+            ],
+
+            faccoes: [
+                {
+                    id: "bardos",
+                    nome: "Bardos",
+                    desc: "<p>Descartar os bardos como sendo músicos e contadores de histórias comuns faz um desserviço à longa tradição desses apresentadores itinerantes. Eles estiveram entre os primeiros a preservarem a música da antiguidade, a registrarem os grandes eventos da história e a protegerem dos inimigos da civilização tudo aquilo que aprenderam.</p><p class='mt-4'>Os bardos formam uma sociedade vaga de historiadores, musicistas, contadores de história, atores e outros apresentadores. Sua chegada é frequentemente motivo de grande celebração, e um encontro com um bardo é falado por anos a fio.</p>"
+                },
+                {
+                    id: "corvos",
+                    nome: "Corvos",
+                    desc: "<p>Os Corvos são a guilda de assassinos e ladrões mais notória e eficiente de Allara, originada nas sombras de Pedra Branca, mas com agentes operando em todo o continente. Embora prestem serviços a quem puder pagar, sua influência se concentra especialmente na capital e em seu submundo, Sanguine.</p><p class='mt-4'>Seu credo é simples: <strong>o contrato é lei</strong>, e a discrição é a arma suprema. Seus membros são mestres em infiltração, coleta de informações e uso de venenos. São identificáveis por usarem máscaras de bico de corvo durante a execução de trabalhos de alto risco.</p>"
+                },
+                {
+                    id: "criaturas-da-noite",
+                    nome: "Criaturas da Noite",
+                    desc: "<p>Termo geral usado para se referir a Vampiros, Dampiros e outras entidades que se alimentam de sangue ou energia vital. A maior concentração se encontra em Sanguine, a cidade subterrânea sob Pedra Branca.</p><p class='mt-4'>Em sua maioria, buscam uma existência pacífica e são governados pela <strong>Rainha Carmilla Targaryen</strong>. No entanto, facções dissidentes iniciaram ataques à superfície, buscando saciar sua sede abertamente em Pedra Branca, o que ameaça expor Sanguine e provocar uma guerra com os humanos.</p>"
+                },
+                {
+                    id: "druidas",
+                    nome: "Druidas",
+                    desc: "<p>Os druidas têm uma agenda secreta e fazem progressos pontuais prestando o seu suporte a vários povos e figuras, somente para abandoná-los quando tiverem cumprido o seu propósito. Para qual fim eles trabalham, ninguém sabe, exceto os próprios druidas.</p><p class='mt-4'>Eles vestem capas pretas encapuzadas e por vezes têm a companhia de buscadores, guerreiros especialmente treinados para agir como seus espiões e sabotadores. As pessoas os veem como intrometidos, criadores de intrigas e manipuladores cujas ações sempre têm um preço. Opor-se a eles traz o mal àqueles em seu caminho.</p>"
+                },
+                {
+                    id: "guardioes",
+                    nome: "Guardiões",
+                    desc: "<p>A ordem militar dedicada a guarnecer o Baluarte, a maciça muralha de gelo e pedra no extremo norte que barra o caminho dos horrores da Devastação. Jurados à vigilância eterna e ao sacrifício, os Guardiões representam a última esperança contra a corrupção do Antigo Império.</p><p class='mt-4'>O financiamento cessou, suprimentos são escassos, e o moral está sob pressão constante. Apesar do abandono do sul, a liderança atual, sob o comando do valoroso <strong>Comandante Ironhand</strong>, consegue inspirar os Guardiões a manterem a linha. Ser um Guardião hoje é ser um herói trágico.</p>"
+                },
+                {
+                    id: "igreja-do-altivo",
+                    nome: "Igreja do Altivo",
+                    desc: "<p>A fé dominante do Grande Reino, que derrubou a Fé Antiga. A doutrina afirma que o Altivo veio à Terre para salvar os mortais da morte, mas viu o trono do Paraíso ocupado pelo <strong>Adversário</strong>, a quem prendeu na Perdição.</p><p class='mt-4'>A Igreja tem lutado para desarmar a crescente violência, comprometendo seus guerreiros sagrados à causa de restaurar a ordem. Seu símbolo é um cometa. Sua Inquisição existe para revelar e destruir os inimigos da luz e os serviçais do Adversário (cujo símbolo é um pentagrama).</p>"
+                },
+                {
+                    id: "magos",
+                    nome: "Magos",
+                    desc: "<p>A sociedade de elite de usuários de magia que reside na <strong>Torre de Marfim</strong>. Eles se consideram a mais alta autoridade na magia, codificando os métodos corretos e expulsando quem discorda.</p><p class='mt-4'>Agora que o Grande Reino, seu patrocinador, está em guerra civil, os magos estão desesperados para controlar os seus destinos. Há aspirantes por toda parte que não irão parar por nada para romper sua hegemonia. Muitos farsantes se mascaram como magos, e os verdadeiros magos os odeiam, destruindo-os com suas capacidades mágicas superiores quando os encontram.</p>"
+                },
+                {
+                    id: "monasterio",
+                    nome: "Monastério Punho do Dragão",
+                    desc: "<p>Aninhado nos Mil Degraus, este monastério é o auge da disciplina física e espiritual. Devotos de <strong>Draconus</strong>, eles se dedicam a alcançar o Caminho do Dragão.</p><p class='mt-4'>A ordem estabeleceu um estilo de luta desarmado que imita a força e os ataques de garra dos dragões. Aqueles que dominam a técnica relatam que um dragão aparece em seu corpo, como se tatuado na pele, e se move para os braços ou serpenteia no torso durante a luta. Guardam um cofre sagrado contendo as Escamas Sacras, onde as verdades de Draconus foram registradas.</p>"
+                },
+                {
+                    id: "paladinos",
+                    nome: "Paladinos",
+                    desc: "<p>A Ordem de elite do Grande Reino. Eles precipitaram a guerra civil com o regicídio, alegando que o Rei havia traído seu juramento e permitido que a corrupção levasse o povo à ruína.</p><p class='mt-4'>O ato os marcou como traidores e os Paladinos agora estão divididos e caçados. O grupo principal, liderado pelo <strong>Grão-Mestre Valerius</strong>, luta para instalar um governo de virtude e meritocracia, mas a maioria os enxerga como a causa do caos.</p>"
+                },
+                {
+                    id: "patrulheiros",
+                    nome: "Patrulheiros",
+                    desc: "<p>Os cavaleiros mais reais despachados para vagarem pela natureza, ajudando aqueles em necessidade e defendendo os indefesos. Uma sociedade de elite composta por guerreiros honrados, habilidosos em sobrevivência e conhecimento da natureza, os patrulheiros vão aonde outros não ousam ir.</p><p class='mt-4'>Eles enfrentam todos os servos do mal. Os patrulheiros nunca foram numerosos, e seus números encolheram. Os verdadeiros patrulheiros ficam atentos em busca de indivíduos talentosos e podem aceitá-los como escudeiros.</p>"
+                }
+            ],
+        };
+
+        // =================================================================
+        // LÓGICA DO SPA
+        // =================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const mainNavButtons = document.querySelectorAll('.nav-button');
+            const mainNavMobile = document.getElementById('main-nav-mobile');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            const regioesContent = document.getElementById('regioes-content');
+            const regiaoFilters = document.getElementById('regiao-filters');
+            const regiaoSearch = document.getElementById('regiao-search');
+
+            const casasContent = document.getElementById('casas-content');
+            const casasFilters = document.getElementById('casas-filters');
+            const casaSearch = document.getElementById('casa-search');
+
+            const faccoesList = document.getElementById('faccoes-list');
+            const faccaoDetail = document.getElementById('faccoes-detail');
+            const faccaoSearch = document.getElementById('faccao-search');
+
+            let currentRegiaoFiltro = 'Todos';
+            let currentCasaFiltro = 'Todos';
+
+
+            // --- FUNÇÕES DE NAVEGAÇÃO ---
+
+            function showSection(targetId) {
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+
+                // Atualiza a navegação desktop
+                mainNavButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.target === targetId);
+                });
+
+                // Atualiza a navegação mobile
+                mainNavMobile.value = targetId;
+
+                // Lógica de renderização inicial
+                if (targetId === 'regioes') {
+                    renderRegiaoFilters();
+                    renderRegioes(currentRegiaoFiltro, regiaoSearch.value);
+                } else if (targetId === 'faccoes') {
+                    renderFaccaoList(faccaoSearch.value);
+                } else if (targetId === 'casas-nobres') {
+                    renderCasaFilters();
+                    renderCasasNobres(currentCasaFiltro, casaSearch.value);
+                }
+            }
+
+            // Manipulador de clique para botões de navegação desktop
+            mainNavButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    showSection(button.dataset.target);
+                });
+            });
+
+            // Manipulador de mudança para navegação mobile
+            mainNavMobile.addEventListener('change', (e) => {
+                showSection(e.target.value);
+            });
+
+
+            // --- FUNÇÕES DE REGIÕES (Locais) ---
+
+            function renderRegiaoFilters() {
+                regiaoFilters.innerHTML = '';
+                const regioes = ['Todos', ...new Set(db.regioes.map(r => r.regiao))];
+
+                regioes.forEach(regiao => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-button';
+                    button.textContent = regiao;
+                    button.dataset.regiao = regiao;
+                    button.classList.toggle('active', regiao === currentRegiaoFiltro);
+                    button.addEventListener('click', () => {
+                        currentRegiaoFiltro = regiao;
+                        document.querySelectorAll('#regiao-filters button').forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        renderRegioes(currentRegiaoFiltro, regiaoSearch.value);
+                    });
+                    regiaoFilters.appendChild(button);
+                });
+            }
+
+            function renderRegioes(regiaoFiltro, buscaTermo = '') {
+                regioesContent.innerHTML = '';
+                const termo = buscaTermo.toLowerCase();
+
+                const regioesFiltradas = db.regioes.filter(local => {
+                    const filtroRegiao = regiaoFiltro === 'Todos' || local.regiao === regiaoFiltro;
+                    const filtroBusca = local.nome.toLowerCase().includes(termo) || local.desc.toLowerCase().includes(termo);
+                    return filtroRegiao && filtroBusca;
+                });
+
+                if (regioesFiltradas.length === 0) {
+                    regioesContent.innerHTML = `<p class="col-span-full text-center text-lg text-gray-500 py-10">Nenhum local encontrado para os filtros e termo de busca atuais.</p>`;
+                    return;
+                }
+
+                regioesFiltradas.forEach(local => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <p class="text-sm font-semibold mb-2 text-primary">${local.regiaoNome}</p>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">${local.nome}</h3>
+                        <p class="text-gray-700 text-base">${local.desc}</p>
+                    `;
+                    regioesContent.appendChild(card);
+                });
+            }
+
+            regiaoSearch.addEventListener('input', () => {
+                renderRegioes(currentRegiaoFiltro, regiaoSearch.value);
+            });
+
+
+            // --- FUNÇÕES DE CASAS NOBRES ---
+
+            function renderCasaFilters() {
+                casasFilters.innerHTML = '';
+                const regioes = ['Todos', ...new Set(db.casas.map(c => c.regiao))];
+
+                regioes.forEach(regiao => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-button';
+                    button.textContent = regiao;
+                    button.dataset.regiao = regiao;
+                    button.classList.toggle('active', regiao === currentCasaFiltro);
+                    button.addEventListener('click', () => {
+                        currentCasaFiltro = regiao;
+                        document.querySelectorAll('#casas-filters button').forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        renderCasasNobres(currentCasaFiltro, casaSearch.value);
+                    });
+                    casasFilters.appendChild(button);
+                });
+            }
+
+            function renderCasasNobres(regiaoFiltro, buscaTermo = '') {
+                casasContent.innerHTML = '';
+                const termo = buscaTermo.toLowerCase();
+
+                const casasFiltradas = db.casas.filter(casa => {
+                    const filtroRegiao = regiaoFiltro === 'Todos' || casa.regiao === regiaoFiltro;
+                    const filtroBusca = casa.nome.toLowerCase().includes(termo) || casa.status.toLowerCase().includes(termo) || casa.tema.toLowerCase().includes(termo);
+                    return filtroRegiao && filtroBusca;
+                });
+
+                if (casasFiltradas.length === 0) {
+                    casasContent.innerHTML = `<p class="col-span-full text-center text-lg text-gray-500 py-10">Nenhuma Casa Nobre encontrada para os filtros e termo de busca atuais.</p>`;
+                    return;
+                }
+
+                casasFiltradas.forEach(casa => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3 class="text-2xl font-bold text-primary mb-2">${casa.nome}</h3>
+                        <p class="text-sm font-semibold text-gray-600 mb-4">Slogan: <span class="text-gray-800 italic">${casa.slogan || 'Não definido'}</span></p>
+                        <p class="text-xs font-medium text-gray-500 uppercase">Região de Origem: <strong>${casa.regiao}</strong></p>
+                        
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <h4 class="text-base font-semibold text-gray-800 mb-1">Status e Legado:</h4>
+                            <p class="text-gray-700 text-sm mb-3">${casa.status}</p>
+                            <h4 class="text-base font-semibold text-gray-800 mb-1">Temas Chave:</h4>
+                            <p class="text-gray-700 text-sm italic">${casa.tema}</p>
+                        </div>
+                    `;
+                    casasContent.appendChild(card);
+                });
+            }
+
+            casaSearch.addEventListener('input', () => {
+                renderCasasNobres(currentCasaFiltro, casaSearch.value);
+            });
+
+
+            // --- FUNÇÕES DE FACÇÕES ---
+
+            function renderFaccaoList(buscaTermo = '') {
+                faccoesList.innerHTML = '';
+                const termo = buscaTermo.toLowerCase();
+
+                const faccoesFiltradas = db.faccoes.filter(faccao => {
+                    return faccao.nome.toLowerCase().includes(termo) || faccao.desc.toLowerCase().includes(termo);
+                });
+
+                if (faccoesFiltradas.length === 0) {
+                    faccoesList.innerHTML = `<p class="text-gray-500 p-4 text-center">Nenhuma facção encontrada.</p>`;
+                    faccaoDetail.innerHTML = `<p class="text-gray-500 p-4">Nenhum detalhe para exibir.</p>`;
+                    return;
+                }
+
+                let firstFaccaoId = null;
+                faccoesFiltradas.forEach((faccao, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-button text-left';
+                    button.textContent = faccao.nome;
+                    button.dataset.id = faccao.id;
+                    button.addEventListener('click', () => {
+                        renderFaccaoDetail(faccao.id);
+                        document.querySelectorAll('#faccoes-list button').forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    });
+                    faccoesList.appendChild(button);
+
+                    if (index === 0) {
+                        firstFaccaoId = faccao.id;
+                    }
+                });
+
+                // Seleciona e renderiza a primeira facção por padrão
+                if (firstFaccaoId) {
+                    renderFaccaoDetail(firstFaccaoId);
+                    // Ativa o primeiro botão da lista filtrada
+                    faccoesList.querySelector(`[data-id="${firstFaccaoId}"]`).classList.add('active');
+                }
+            }
+
+            function renderFaccaoDetail(faccaoId) {
+                const faccao = db.faccoes.find(f => f.id === faccaoId);
+                if (faccao) {
+                    faccaoDetail.innerHTML = `
+                        <h3 class="text-2xl font-semibold text-primary mb-4">${faccao.nome}</h3>
+                        <div class="space-y-4 text-gray-700 leading-relaxed">${faccao.desc}</div>
+                    `;
+                }
+            }
+
+            faccaoSearch.addEventListener('input', () => {
+                renderFaccaoList(faccaoSearch.value);
+            });
+
+
+            // --- INICIALIZAÇÃO ---
+
+            // Inicializa a seção 'Visão Geral' e a navegação
+            showSection('visao-geral');
+            mainNavButtons[0].classList.add('active');
+        });
+    </script>
 </body>
 
 </html>
